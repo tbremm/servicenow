@@ -10,3 +10,7 @@ Contains servicenow api helpers
     * This will be a newline-separated list of the email addresses of everyone in the given groups
 * Username: The username of the account that this will be running as (must have appropriate api and table permissions)
 * Password: The password for the given username
+
+
+# TODO
+* Create class for helpers so we don't have to pass the un/pw all the time
