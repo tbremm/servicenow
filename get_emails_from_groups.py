@@ -65,6 +65,24 @@ def get_emails_from_users(url, un, pw, users):
     return emails
 
 
+def print_help_message():
+    print('Usage:')
+    print('python get_emails_from_groups.py -u <url_prefix> -i <input_groups_file> -o <output_emails_file> '
+          '-n <username> -p <password>')
+    print()
+    print('-u, --url_prefix: the first part of the url, eg. https://<url_prefix>.service-now.com')
+    print('-i, --groups: The path (relative or absolute) to the input file containing the groups')
+    print('\tInput file should be a newline-separated list of user groups')
+    print('-o, --emails: The path (relative or absolute) to the output file containing the resulting emails')
+    print('\tThis will be a newline-separated list of the email addresses of everyone in the given groups '
+          '(creates or overwrites)')
+    print('-n, --userid: The username of the account that this will be running as (must have appropriate api and '
+          'table permissions)')
+    print('-p, --password: The password for the given username')
+    print('-h: Prints this help message')
+    return
+
+
 def main(argv):
     group_in_file = ''  # Input file containing the groups from which you want to harvest emails
     emails = ''  # Output file where the email list (\n separated) gets output
@@ -76,11 +94,11 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, 'hu:i:o:n:p:', ['url_prefix=', 'groups=', 'emails=', 'userid=', 'password='])
     except getopt.GetoptError:
-        print('get_emails_from_groups.py -e <url_prefix> -i <input_groups_file> -0 <output_emails_file>')
+        print_help_message()
         sys.exit(1)
     for opt, arg in opts:
         if opt == '-h':
-            print('get_emails_from_groups.py -e <environment aka url_prefix> -i <group_csv_file> -0 <email_csv_file>')
+            print_help_message()
             sys.exit(0)
         elif opt in ('-u', '--url_prefix'):
             snow_url = 'https://' + arg + '.service-now.com/api/now/'
