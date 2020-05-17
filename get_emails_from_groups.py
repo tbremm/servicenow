@@ -15,43 +15,64 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import sys, getopt, requests
+import sys
+import getopt
+import requests
+import json
 
 
-# Returns a dict of <user name>,<email address> for the given group
-def get_emails_from_group(url, un, pw, group):
+# Returns a list of user display names for the given group
+def get_users_from_group(url, un, pw, group):
     headers = {'Accept': 'application/json'}
-    table_url = 'https://dev57241.service-now.com/api/now/table/sys_user_group?sysparm_query=GOTOname%25253DApplication%252520Development&sysparm_fields=name&sysparm_limit=1'
-    response = requests.get(table_url, auth=(un, pw), headers=headers)
+    query_url = url + 'table/sys_user_grmember?sysparm_query=group.name=' + group + '&sysparm_display_value=all&sysparm_fields=user'
+    response = requests.get(query_url, auth=(un, pw), headers=headers)
     if response.status_code != 200:
         print('Status:', response.status_code, 'Headers:', response.headers, 'Error Response:', response.content)
         exit()
+    data = json.loads(response.content)
+    users = []
+    for result in data['result']:
+        users.append(result['user']['display_value'])
+    return users
 
-    return response.content
+
+# Provide a list of user display names and this will return a list of their email addresses
+def get_emails_from_users(url, un, pw, users):
+    headers = {'Accept': 'application/json'}
+    emails = []
+    user_set = set(users)  # Remove duplicates to save on number of requests
+    for user in user_set:
+        query_url = url + 'table/sys_user?sysparm_query=name=' + user + '&sysparm_display_value=all&sysparm_fields=email'
+        response = requests.get(query_url, auth=(un, pw), headers=headers)
+        if response.status_code != 200:
+            print('Status:', response.status_code, 'Headers:', response.headers, 'Error Response:', response.content)
+            exit()
+        data = json.loads(response.content)
+        emails.append(data['result'][0]['email']['display_value'])
+    return emails
 
 
 def main(argv):
-    all_groups = ''  # Input file containing the groups for which you want the emails for
-    emails_csv = ''  # Output file to put the email list
-    snow_url = ''  # Which snow instance to use (eg. www.<url_prefix>.service-now.com)
+    all_groups = ''  # Input file containing the groups from which you want to harvest emails
+    emails = ''  # Output file where the email list (\n separated) gets output
+    snow_url = ''  # Which snow instance to use (eg. for www.<url_prefix>.service-now.com, this should be <url_prefix>)
     user_id = ''  # Username for the account used by this program
     password = ''  # Password for the given username
     try:  # handle input args
-        opts, args = getopt.getopt(argv, 'he:i:o:n:p', ['url_prefix=', 'groups=', 'emailcsv=', 'userid=', 'password='])
+        opts, args = getopt.getopt(argv, 'he:i:o:n:p:', ['url_prefix=', 'groups=', 'emails=', 'userid=', 'password='])
     except getopt.GetoptError:
-        print('get_emails_from_groups.py -e <dev|test|prod> -i <groups_file> -0 <email_csv_file>')
-        sys.exit(2)
+        print('get_emails_from_groups.py -e <url_prefix> -i <input_groups_file> -0 <output_emails_file>')
+        sys.exit(1)
     for opt, arg in opts:
         if opt == '-h':
             print('get_emails_from_groups.py -e <environment aka url_prefix> -i <group_csv_file> -0 <email_csv_file>')
-            sys.exit()
+            sys.exit(0)
         elif opt in ('-e', '--url_prefix'):
-            # TODO: Validate URL prefix input
             snow_url = 'https://' + arg + '.service-now.com/api/now/'
         elif opt in ('-i', '--groupcsv'):
             all_groups = arg
-        elif opt in ('-o', '--emailcsv'):
-            emails_csv = arg
+        elif opt in ('-o', '--emails'):
+            emails = arg
         elif opt in ('-n', '--userid'):
             user_id = arg
         elif opt in ('-p', '--password'):
@@ -59,10 +80,24 @@ def main(argv):
 
     # Read in groups from the input file (expects newline separated groups)
     groups_file = open(all_groups)
-    groups = groups_file.read().splitlines()
-    for group in groups:
-        print(get_emails_from_group(snow_url, user_id, password, group))
+    in_groups = set(groups_file.read().splitlines())  # Use a set to eliminate duplicates
+    groups_file.close()
 
+    # Get all the users from the given set of groups
+    user_data = []
+    for in_group in in_groups:
+        user_data.append(get_users_from_group(snow_url, user_id, password, in_group))
+    flat_user_list = []
+    for group_users in user_data:  # Put all users into one non-nested list
+        flat_user_list += group_users
+    email_list = get_emails_from_users(snow_url, user_id, password, flat_user_list)
+
+    # Write the emails to the output file
+    with open(emails, 'w') as out_file:
+        out_file.write('\n'.join(email_list))
+    out_file.close()
+    print('Script complete. See the ' + emails + ' file for the list of emails.')
+    sys.exit(0)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
