@@ -52,7 +52,7 @@ def print_help_message():
     print('-i, --cis: The path (relative or absolute) to the input file containing the CIs')
     print('\tInput file should be a newline-separated list of Configuration Items (CIs)')
     print('-o, --groups: The path (relative or absolute) to the output file containing the resulting assignment groups')
-    print('\tThis will be a newline-separated list of the assignment groups for the given CIs (creates or overwrites)')
+    print('\tThis will be a comma-separated list of CIs and assignment groups (creates or overwrites)')
     print('-n, --userid: The username of the account that this will be running as (must have appropriate api and '
           'table permissions)')
     print('-p, --password: The password for the given username')
