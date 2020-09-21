@@ -69,7 +69,7 @@ def main(argv):
 
     # Handle input args
     try:
-        opts, args = getopt.getopt(argv, 'hu:i:o:n:p:', ['url_prefix=', 'cis=', 'groups=', 'userid=', 'password='])
+        opts, args = getopt.getopt(argv, 'h:u:i:o:n:p:', ['url_prefix=', 'cis=', 'groups=', 'userid=', 'password='])
     except getopt.GetoptError:
         print_help_message()
         sys.exit(1)
@@ -95,7 +95,7 @@ def main(argv):
 
     cis_ags = get_ags_from_cis(snow_url, user_id, password, in_cis)
 
-    # Write the emails (newline separated) to the output file
+    # Write the CIs and AGs (CSV format) to the output file
     with open(group_out_file, 'w') as out_file:
         out_file.write('CI, Assignment Group\n')
         for ci_ag in cis_ags:
