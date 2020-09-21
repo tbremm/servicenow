@@ -61,8 +61,8 @@ def print_help_message():
 
 
 def main(argv):
-    ci_in_file = ''  # Input file containing the groups from which you want to harvest emails
-    group_out_file = ''  # Output file where the email list (\n separated) gets output
+    ci_in_file = ''  # Input file containing the groups from which you want to harvest assignment groups
+    group_out_file = ''  # Output file where the CI/AG list (comma separated) gets output
     snow_url = ''  # Which snow instance to use (eg. for www.<url_prefix>.service-now.com, this should be <url_prefix>)
     user_id = ''  # Username for the account used by this program
     password = ''  # Password for the given username
