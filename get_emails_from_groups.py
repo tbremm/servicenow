@@ -92,7 +92,7 @@ def main(argv):
 
     # Handle input args
     try:
-        opts, args = getopt.getopt(argv, 'hu:i:o:n:p:', ['url_prefix=', 'groups=', 'emails=', 'userid=', 'password='])
+        opts, args = getopt.getopt(argv, 'h:u:i:o:n:p:', ['url_prefix=', 'groups=', 'emails=', 'userid=', 'password='])
     except getopt.GetoptError:
         print_help_message()
         sys.exit(1)
